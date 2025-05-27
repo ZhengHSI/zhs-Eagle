@@ -11,6 +11,7 @@ args = parser.parse_args()
 s = 0
 gpus = [[0], [1], [2], [3], [4], [5], [6], [7]]
 num_p = len(gpus)
+
 if "sharegpt" in args.dataset.lower():
     e = 120600 - 1
     outdir = "{}/ShareGPT_{}_{}_mufp16".format(args.outdir, s, e)
