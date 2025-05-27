@@ -7,10 +7,12 @@ import random
 from safetensors import safe_open
 
 from transformers.models.llama.configuration_llama import LlamaConfig
+from transformers.models.qwen3.configuration_qwen3 import Qwen3Config
 
 from transformers import AutoTokenizer, TrainingArguments
 
 from modules.model.llama_eagle import LlamaForCausalLMEagle
+from modules.model.qwen3_eagle import Qwen3ForCausalLMEagle
 from modules.data.data import (
     EagleLocalDataset,
     DataCollatorWithPadding,
@@ -24,7 +26,7 @@ wandb_run_name = wandb.run.name
 
 path = "models/llama-8b/"
 
-# -------------------------------- Load original Llama weights --------------------------------
+# -------------------------------- Load original lm_head and embed_tokens weight --------------------------------
 
 with open(os.path.join(path, "model.safetensors.index.json"), "r") as f:
     index_json = json.loads(f.read())
@@ -45,19 +47,33 @@ with safe_open(os.path.join(path, lm_head_path), framework="pt", device="cpu") a
 tokenizer = AutoTokenizer.from_pretrained(path)
 tokenizer.pad_token = tokenizer.eos_token
 
-model_args = LlamaConfig(
-    vocab_size=vocab_size,
-    hidden_size=hidden_dim,
-    intermediate_size=14336,
-    num_hidden_layers=1,
-    bos_token_id=128000,
-    eos_token_id=[128001, 128008, 128009],
-    num_key_value_heads=8,
-    num_attention_heads=32,
-    tie_word_embeddings=False,
-)
+if "llama" in path.lower():
+    model_args = LlamaConfig(
+        vocab_size=vocab_size,
+        hidden_size=hidden_dim,
+        intermediate_size=14336,
+        num_hidden_layers=1,
+        bos_token_id=128000,
+        eos_token_id=[128001, 128008, 128009],
+        num_key_value_heads=8,
+        num_attention_heads=32,
+        tie_word_embeddings=False,
+    )
+    draft_model = Qwen3ForCausalLMEagle(model_args)
+elif "qwen" in path.lower():
+    model_args = Qwen3Config(
+        vocab_size=vocab_size,
+        hidden_size=hidden_dim,
+        intermediate_size=14336,
+        num_hidden_layers=1,
+        bos_token_id=128000,
+        eos_token_id=[128001, 128008, 128009],
+        num_key_value_heads=8,
+        num_attention_heads=32,
+        tie_word_embeddings=False,
+    )
+    draft_model = LlamaForCausalLMEagle(model_args)
 
-draft_model = LlamaForCausalLMEagle(model_args)
 draft_model.load_embedding_weights(tensor)
 draft_model.to("cuda:0")
 draft_model.embed_tokens.weight.requires_grad = False

@@ -13,9 +13,9 @@ RESET = "\033[0m"
 
 def main():
     parser = argparse.ArgumentParser(description="View data")
-    parser.add_argument("--data-path", type=str, default="tmp_data/data_0.ckpt")
+    parser.add_argument("--data-path", type=str, default="/workdir/datasets/ultrachat_200k/1/data_0.ckpt")
     parser.add_argument(
-        "--tokenizer", type=str, default="meta-llama/Meta-Llama-3.1-8B-Instruct"
+        "--tokenizer", type=str, default="/workdir/huggingface.co/meta-llama/Llama-3.1-8B-Instruct"
     )
     args = parser.parse_args()
 
