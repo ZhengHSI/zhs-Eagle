@@ -24,7 +24,7 @@ from modules.trainer.trainer import EagleTrainer
 wandb.init(project="BaldEagle")
 wandb_run_name = wandb.run.name
 
-path = "models/llama-8b/"
+path = "/workdir/huggingface.co/meta-llama/Llama-3.1-8B-Instruct"
 
 # -------------------------------- Load original lm_head and embed_tokens weight --------------------------------
 
@@ -59,7 +59,8 @@ if "llama" in path.lower():
         num_attention_heads=32,
         tie_word_embeddings=False,
     )
-    draft_model = Qwen3ForCausalLMEagle(model_args)
+    draft_model = LlamaForCausalLMEagle(model_args)
+
 elif "qwen" in path.lower():
     model_args = Qwen3Config(
         vocab_size=vocab_size,
@@ -72,7 +73,7 @@ elif "qwen" in path.lower():
         num_attention_heads=32,
         tie_word_embeddings=False,
     )
-    draft_model = LlamaForCausalLMEagle(model_args)
+    draft_model = Qwen3ForCausalLMEagle(model_args)
 
 draft_model.load_embedding_weights(tensor)
 draft_model.to("cuda:0")
@@ -94,8 +95,8 @@ head.eval()
 
 # -------------------------------- Load data --------------------------------
 
-sharegpt_datapaths = list_local_files("/mnt/ssd4tb/sharegpt_grouped_5k/")
-ultra_chat_datapaths = list_local_files("/mnt/ssd4tb/ultrachat_0_199999_mufp16/")
+sharegpt_datapaths = list_local_files("/workdir/datasets/ShareGPT_Vicuna_unfiltered/ShareGPT_0_120599_mufp16")
+ultra_chat_datapaths = list_local_files("/workdir/datasets/ultrachat_200k/ultrachat_0_199999_mufp16")
 
 combined_data_paths = (
     sharegpt_datapaths[: int(len(sharegpt_datapaths) * 0.95)] + ultra_chat_datapaths
@@ -121,7 +122,7 @@ training_args = TrainingArguments(
     remove_unused_columns=False,
     bf16=True,
     fp16=False,
-    dataloader_num_workers=4,
+    dataloader_num_workers=0,
     warmup_ratio=0.01,
     learning_rate=1e-4,  # 1e-3
     lr_scheduler_type="constant",  # Placeholder, we override it in the trainer
